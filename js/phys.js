@@ -1,12 +1,13 @@
 var renderer;
 var scene;
 var camera;
-var controls;
+var cameraControls;
+var controller;
 
 init();
 animate();
 
-var view;
+
 
 
 function init() {
@@ -17,8 +18,7 @@ function init() {
 	
 	addGrid();
 	
-	var view = new View(-45, -45);
-	view.addToScene(scene);
+	initMVC();
 }
 
 
@@ -40,7 +40,7 @@ function initCamera() {
     camera = new THREE.PerspectiveCamera(75, 800 / 600, 1, 1000);
     camera.position.set(0, 10, 20);   
     
-    controls = new THREE.OrbitControls(camera, renderer.domElement);    
+    cameraControls = new THREE.OrbitControls(camera, renderer.domElement);    
 }
 
 
@@ -61,23 +61,59 @@ function addGrid() {
 	scene.add(grid);
 }
 
+function initMVC() {
+	var dt = 0.1;
+	
+	var R = 5;
+	var m = 2;
+	var g = 9.81;
+	var omega = 1;
+	var theta0 = 90;
+	var thetaDot0 = 0;
+	var gamma = 0;
+	
+	var model = new Model(R, m, g, omega, theta0, thetaDot0, gamma);
+	var view = new View(0, theta0);
+	var integrator = new RK4Integrator(dt);
+	
+	model.view = view;
+	model.integrator = integrator;
+	
+	controller = new Controller(model);
+	
+	view.addToScene(scene);	
+}
+
 
 function animate() {
+    controller.update();
+	
 	renderer.render(scene, camera);
     requestAnimationFrame(animate);	
-    controls.update();
+    cameraControls.update();
+}
+
+
+function Controller(model) {
+	
+	this.model = model;
+	
+	this.update = function() {
+		this.model.move();
+	}
+	
 }
 
 
 /* View of bead on rotating ring */
-function View(omega, theta) {
+function View(phi, theta) {
+	
 	var ring;
 	var ringRadius = 5;
 	var shiftY = ringRadius + 2;
 	var lineIndicator;
 	var bead;
 	
-
 	init();
 	
 	function init() {		
@@ -102,7 +138,7 @@ function View(omega, theta) {
         
         bead = new THREE.Mesh(beadGeometry, beadMaterial);
         
-        rotate(omega, theta);
+        rotate(phi, theta);
 	}
 	
 	function addToScene(scene) {
@@ -111,15 +147,12 @@ function View(omega, theta) {
 		scene.add(bead);
 	}
 	
-	function rotate(omega, theta) {
-		omega = omega * Math.PI / 180;
-		theta = theta * Math.PI / 180;
-		
-		ring.rotation.y = omega;
+	function rotate(phi, theta) {
+		ring.rotation.y = phi;
 
-		bead.position.x = ringRadius * Math.sin(theta) * Math.cos(-omega);
-		bead.position.y = -ringRadius * Math.cos(theta) + shiftY;
-        bead.position.z = ringRadius * Math.sin(theta) * Math.sin(-omega);
+		bead.position.x = ringRadius * Math.sin(theta) * Math.cos(-phi);
+		bead.position.y = ringRadius * Math.cos(theta) + shiftY;
+        bead.position.z = ringRadius * Math.sin(theta) * Math.sin(-phi);
 	}
 	
 	return {
@@ -130,4 +163,66 @@ function View(omega, theta) {
 }
 
 
+function Model(R, m, g, omega, theta0, thetaDot0, gamma) {
+
+	this.view;
+	this.integrator;
+	
+	this.phi = 0;
+    this.theta = theta0;
+	this.thetaDot = thetaDot0;
+	this.bigOmega2 = g / R;
+    this.bigOmega = Math.sqrt(this.bigOmega2);
+    this.omega2 = omega * omega;
+
+    this.accel = function(x, v) { 
+		return Math.sin(x) * (this.omega2 * Math.cos(x) + this.bigOmega2) - gamma / m * v;;
+    }
+        
+    this.move =  function() {
+        var stateVect = this.integrator.integrate(this);
+
+        this.theta = stateVect[0];
+        this.thetaDot = stateVect[1];
+
+        this.phi = this.phi + omega * this.integrator.dt;
+
+        this.view.rotate(this.phi, this.theta);
+    }	
+    
+}
+
+
+function RK4Integrator(dt) {
+	
+	this.dt = dt;
+
+    this.integrate = function(model) {
+        var x1, x2, x3, x4;
+        var v1, v2, v3, v4;
+        var a1, a2, a3, a4;
+
+        x1 = model.theta;        
+        v1 = model.thetaDot;
+        a1 = model.accel(x1, v1);
+
+        x2 = x1 + 0.5 * v1 * dt;
+        v2 = v1 + 0.5 * a1 * dt;
+        a2 = model.accel(x2, v2);
+    
+        x3= x1 + 0.5 * v2 * dt;
+        v3= v1 + 0.5 * a2 * dt;
+        a3 = model.accel(x3, v3);
+    
+        x4 = x1 + v3 * dt;
+        v4 = v1 + a3 * dt;
+        a4 = model.accel(x4, v4);
+              
+        var x = x1 + (dt / 6.0) * (v1 + 2 * v2 + 2 * v3 + v4);
+        var v = v1 + (dt / 6.0) * (a1 + 2 * a2 + 2 * a3 + a4);                
+                
+        return [x, v]
+    }
+        
+}
 
