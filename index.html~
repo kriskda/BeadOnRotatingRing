@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+
     <title>Koralik na obracającym się pierścieniu</title>
         
     <meta charset="utf-8"> 
@@ -8,6 +9,8 @@
     <script src="js/three.min.js"></script>
     <script src="js/OrbitControls.js"></script>
     <script src="js/dat.gui.min.js"></script>
+    <script src="js/jquery.js"></script>
+    <script src="js/vtip.js"></script>
     
 	<script type="text/x-mathjax-config"> 
   		MathJax.Hub.Config({
@@ -20,11 +23,11 @@
 	<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
 	
 	<link rel="stylesheet" type="text/css" href="css/mainstyle.css" />
+	<link rel="stylesheet" type="text/css" href="css/vtip.css" />
     
 </head>
 
 <body>
-
 
 <div id="container">
 
