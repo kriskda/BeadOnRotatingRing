@@ -113,6 +113,18 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 	};
 
+	this.rotateRight = function ( angle ) {
+
+		if ( angle === undefined ) {
+
+			angle = getAutoRotationAngle();
+
+		}
+
+		thetaDelta += angle;
+
+	};	
+
 	this.rotateUp = function ( angle ) {
 
 		if ( angle === undefined ) {

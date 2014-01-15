@@ -4,6 +4,10 @@ var camera;
 var cameraControls;
 var controller;
 
+var container = document.getElementById("threejs_container");
+var width = container.offsetWidth;
+var height = container.offsetHeight;
+
 init();
 animate();
 
@@ -24,10 +28,10 @@ function init() {
 
 function initRenderer() {
 	renderer = new THREE.WebGLRenderer({antialias: true});
-    renderer.setSize(800, 600);  
+    renderer.setSize(width, height);  
     renderer.setClearColor("rgb(255, 255, 255)", 1); 
 
-    document.body.appendChild(renderer.domElement);
+	container.appendChild(renderer.domElement);
 }
 
 
@@ -37,7 +41,7 @@ function initScene() {
 
 
 function initCamera() {
-    camera = new THREE.PerspectiveCamera(75, 800 / 600, 1, 1000);
+    camera = new THREE.PerspectiveCamera(75, width / height, 1, 1000);
     camera.position.set(0, 10, 20);   
     
     cameraControls = new THREE.OrbitControls(camera, renderer.domElement);    
@@ -62,15 +66,15 @@ function addGrid() {
 }
 
 function initMVC() {
-	var dt = 0.1;
+	var dt = 0.01;
 	
-	var R = 5;
-	var m = 2;
-	var g = 9.81;
-	var omega = 1;
-	var theta0 = 90;
-	var thetaDot0 = 0;
-	var gamma = 0;
+	var R = 1*document.getElementById('R').value;
+	var m = 1*document.getElementById('m').value;
+	var g = 1*document.getElementById('g').value;
+	var omega = 1*document.getElementById('omega').value;
+	var theta0 = 1*document.getElementById('theta0').value;
+	var thetaDot0 = 1*document.getElementById('thetaDot0').value;
+	var gamma = 1*document.getElementById('gamma').value;
 	
 	var model = new Model(R, m, g, omega, theta0, thetaDot0, gamma);
 	var view = new View(0, theta0);
@@ -81,12 +85,22 @@ function initMVC() {
 	
 	controller = new Controller(model);
 	
-	view.addToScene(scene);	
+	console.log(controller.model.omega);
+	
+	var gui = new dat.GUI();
+	gui.add(controller, 'isCameraFollowing');
+	gui.add(controller.model, 'omega', 0, 10, 0.1);
+	
+	view.addToScene(scene);		
 }
 
 
 function animate() {
     controller.update();
+ 
+	if (controller.isCameraFollowing) {
+		cameraControls.rotateRight(controller.model.omega / 100.0);  
+	}
 	
 	renderer.render(scene, camera);
     requestAnimationFrame(animate);	
@@ -97,6 +111,7 @@ function animate() {
 function Controller(model) {
 	
 	this.model = model;
+	this.isCameraFollowing = true; 
 	
 	this.update = function() {
 		this.model.move();
@@ -165,18 +180,18 @@ function View(phi, theta) {
 
 function Model(R, m, g, omega, theta0, thetaDot0, gamma) {
 
+	this.omega = omega;
 	this.view;
 	this.integrator;
 	
 	this.phi = 0;
     this.theta = theta0;
 	this.thetaDot = thetaDot0;
-	this.bigOmega2 = g / R;
-    this.bigOmega = Math.sqrt(this.bigOmega2);
-    this.omega2 = omega * omega;
 
     this.accel = function(x, v) { 
-		return Math.sin(x) * (this.omega2 * Math.cos(x) + this.bigOmega2) - gamma / m * v;;
+		var omega2 = this.omega * this.omega;
+
+		return Math.sin(x) * (omega2 * Math.cos(x) + g / R) - gamma / m * v;
     }
         
     this.move =  function() {
@@ -185,7 +200,7 @@ function Model(R, m, g, omega, theta0, thetaDot0, gamma) {
         this.theta = stateVect[0];
         this.thetaDot = stateVect[1];
 
-        this.phi = this.phi + omega * this.integrator.dt;
+        this.phi = this.phi + this.omega * this.integrator.dt;
 
         this.view.rotate(this.phi, this.theta);
     }	
