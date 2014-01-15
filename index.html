@@ -39,24 +39,24 @@
 			<table>
 			
  				<tr>
-  					<td>$g$</td> <td class="vtip" title="Przyśpieszenie grawitacyjne"><input class="inputtext" type="text" id="g" value="9.81" onKeyUp="resetAnimation()" /></td>
-  					<td >$m$</td> <td class="vtip" title="Masa koralika"><input class="inputtext" type="text" id="m" value="2" onKeyUp="resetAnimation()" /></td>
-  					<td>$\theta_0$</td> <td class="vtip" title="Wychylenie początkowe"><input class="inputtext" type="text" id="theta0" value="1.4" onKeyUp="resetAnimation()" /></td> 
-  					<td>$\gamma$</td> <td class="vtip" title="Współczynnik tarcia"><input class="inputtext" type="text" id="gamma" value="0" onKeyUp="resetAnimation()" /></td> 
+  					<td>$g$</td> <td class="vtip" title="Przyśpieszenie grawitacyjne"><input class="inputtext" type="text" id="g" value="9.81" /></td>
+  					<td >$m$</td> <td class="vtip" title="Masa koralika"><input class="inputtext" type="text" id="m" value="2" /></td>
+  					<td>$\theta_0$</td> <td class="vtip" title="Wychylenie początkowe"><input class="inputtext" type="text" id="theta0" value="1.4" /></td> 
+  					<td>$\gamma$</td> <td class="vtip" title="Współczynnik tarcia"><input class="inputtext" type="text" id="gamma" value="0" /></td> 
  				</tr>
  
 		 		<tr>
-  					<td>$R$</td> <td class="vtip" title="Promień obręczy po której porusza się koralik"><input class="inputtext" type="text" id="R" value="5" onKeyUp="resetAnimation()" /></td>  
-  					<td>$\omega$</td> <td class="vtip" title="Częstość z jaką obraca się obręcz"><input class="inputtext" type="text" id="omega" value="2.1" onKeyUp="resetAnimation()" /></td> 
-  					<td>$\dot \theta_0$</td> <td class="vtip" title="Początkowa prędkość kątowa"><input class="inputtext" type="text" id="thetaDot0" value="0" onKeyUp="resetAnimation()" /></td>
+  					<td>$R$</td> <td class="vtip" title="Promień obręczy po której porusza się koralik"><input class="inputtext" type="text" id="R" value="5" /></td>  
+  					<td>$\omega$</td> <td class="vtip" title="Częstość z jaką obraca się obręcz"><input class="inputtext" type="text" id="omega" value="2.1" /></td> 
+  					<td>$\dot \theta_0$</td> <td class="vtip" title="Początkowa prędkość kątowa"><input class="inputtext" type="text" id="thetaDot0" value="0" /></td>
   					<td></td>
  				</tr>
  
 				<tr>
   					<td></td>
   					<td>
-  						<input type="button" value="start / stop" onClick="startStopAnimation()" />
-  						<input type="button" value="reset" onClick="resetAnimation()" />
+  						<input id="startStopButton" type="button" value="start / stop" />
+  						<input id="resetButton" type="button" value="reset" />
   					</td>   
  				</tr>
  				

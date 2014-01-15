@@ -16,7 +16,6 @@ animate();
 
 
 
-
 function init() {
 	initRenderer();
 	initScene();
@@ -44,7 +43,7 @@ function initScene() {
 
 
 function initCamera() {
-    camera = new THREE.PerspectiveCamera(75, width / height, 1, 1000);
+    camera = new THREE.PerspectiveCamera(65, width / height, 1, 1000);
     camera.position.set(0, 10, 20);   
     
     cameraControls = new THREE.OrbitControls(camera, renderer.domElement);    
@@ -65,8 +64,8 @@ function addGrid() {
 	var geometry = new THREE.PlaneGeometry(100, 100, 20, 20);
 	var material = new THREE.MeshPhongMaterial({color: "rgb(200, 200, 200)", wireframe: true});
 	var grid = new THREE.Mesh(geometry, material);
-	
 	grid.rotation.x = -Math.PI / 2;
+	
 	scene.add(grid);
 }
 
@@ -99,31 +98,35 @@ function initMVC() {
 
 
 function animate() {
-    var newTime = getTimeInSeconds();
-    var frameTime = newTime - currentTime;
-    currentTime = newTime;
+	
+	var newTime = getTimeInSeconds();
+	var frameTime = newTime - currentTime;
+	currentTime = newTime;
 
-    accumulator += frameTime;
-    
-    var dt = controller.model.integrator.dt;
+	accumulator += frameTime;
+		
+	var dt = controller.model.integrator.dt;
 
-    while (accumulator >= dt) {
-        controller.update();
+	while (accumulator >= dt) {
+		if (controller.isSimulationRunning) {
+			controller.update();
+		}
 
-        accumulator -= dt;                
-    }	
-    
-    /* Will always point to the center of the frame */
-    cameraControls.target = new THREE.Vector3(0, 0, 0);
- 
-	if (controller.isCameraFollowing) {
+		accumulator -= dt;                
+	}	
+		
+	/* Will always point to the center of the frame */
+	cameraControls.target = new THREE.Vector3(0, 0, 0);
+	 
+	if (controller.isSimulationRunning && controller.isCameraFollowing) {
 		cameraControls.rotateRight(controller.model.omega * frameTime);  
 	}
-	
+
 	cameraControls.update();
 	
 	renderer.render(scene, camera);
     requestAnimationFrame(animate);	
+    
 }
 
 
@@ -136,6 +139,45 @@ function Controller(model) {
 	
 	this.model = model;
 	this.isCameraFollowing = true; 
+	this.isSimulationRunning = false;
+	
+	var self = this;
+	
+	initListeners();
+	
+	function initListeners() {
+		
+		$("#startStopButton").click(function() {
+			self.toggleSimulationRunning();
+		});
+		
+		$("#resetButton").click(function() {
+			self.resetSimulation();
+		});
+		
+		$(".inputtext").keyup(function() {
+			self.resetSimulation();
+		});
+		
+	}
+	
+	this.toggleSimulationRunning = function() {
+		this.isSimulationRunning = !this.isSimulationRunning;
+	}
+	
+	this.resetSimulation = function() {
+		model.R = 1*document.getElementById('R').value;
+		model.m = 1*document.getElementById('m').value;
+		model.g = 1*document.getElementById('g').value;
+		model.omega = 1*document.getElementById('omega').value;
+		model.theta = 1*document.getElementById('theta0').value;
+		model.thetaDot = 1*document.getElementById('thetaDot0').value;
+		model.gamma = 1*document.getElementById('gamma').value;
+		
+		//model.phi = 0
+		
+		self.update();
+	}
 	
 	this.update = function() {
 		this.model.move();
@@ -144,9 +186,9 @@ function Controller(model) {
 }
 
 
-/* View of bead on rotating ring */
+/* View of a bead on rotating ring */
 function View(phi, theta) {
-	
+
 	var ring;
 	var ringRadius = 5;
 	var shiftY = ringRadius + 2;
@@ -202,27 +244,33 @@ function View(phi, theta) {
 }
 
 
+/* Model of a bead on rotating ring */
 function Model(R, m, g, omega, theta0, thetaDot0, gamma) {
 
+	this.R = R;
+	this.m = m;
+	this.g = g;
 	this.omega = omega;
-	this.view;
-	this.integrator;
+	this.theta = theta0;
+	this.thetaDot = thetaDot0;
+	this.gamma = gamma;
 	
 	this.phi = 0;
-    this.theta = theta0;
-	this.thetaDot = thetaDot0;
+	
+	this.view;
+	this.integrator;
 
     this.accel = function(x, v) { 
 		var omega2 = this.omega * this.omega;
 
-		return Math.sin(x) * (omega2 * Math.cos(x) + g / R) - gamma / m * v;
+		return Math.sin(x) * (omega2 * Math.cos(x) + this.g / this.R) - this.gamma / this.m * v;
     }
         
     this.move =  function() {
-        var stateVect = this.integrator.integrate(this);
+        var posVel = this.integrator.integrate(this);
 
-        this.theta = stateVect[0];
-        this.thetaDot = stateVect[1];
+        this.theta = posVel[0];
+        this.thetaDot = posVel[1];
 
         this.phi = this.phi + this.omega * this.integrator.dt;
 
@@ -232,6 +280,7 @@ function Model(R, m, g, omega, theta0, thetaDot0, gamma) {
 }
 
 
+/* Runge-Kutta integrator 4-th order */
 function RK4Integrator(dt) {
 	
 	this.dt = dt;
