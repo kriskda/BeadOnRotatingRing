@@ -8,6 +8,9 @@ var container = document.getElementById("threejs_container");
 var width = container.offsetWidth;
 var height = container.offsetHeight;
 
+var accumulator = 0;
+var currentTime = getTimeInSeconds();
+
 init();
 animate();
 
@@ -86,9 +89,7 @@ function initMVC() {
 	model.integrator = integrator;
 	
 	controller = new Controller(model);
-	
-	console.log(controller.model.omega);
-	
+
 	var gui = new dat.GUI();
 	gui.add(controller, 'isCameraFollowing');
 	gui.add(controller.model, 'omega', 0, 10, 0.1);
@@ -98,18 +99,36 @@ function initMVC() {
 
 
 function animate() {
-    controller.update();
+    var newTime = getTimeInSeconds();
+    var frameTime = newTime - currentTime;
+    currentTime = newTime;
+
+    accumulator += frameTime;
+    
+    var dt = controller.model.integrator.dt;
+
+    while (accumulator >= dt) {
+        controller.update();
+
+        accumulator -= dt;                
+    }	
     
     /* Will always point to the center of the frame */
     cameraControls.target = new THREE.Vector3(0, 0, 0);
  
 	if (controller.isCameraFollowing) {
-		cameraControls.rotateRight(controller.model.omega / 100.0);  
+		cameraControls.rotateRight(controller.model.omega * frameTime);  
 	}
+	
+	cameraControls.update();
 	
 	renderer.render(scene, camera);
     requestAnimationFrame(animate);	
-    cameraControls.update();
+}
+
+
+function getTimeInSeconds() {
+    return new Date().getTime() / 1000;
 }
 
 
