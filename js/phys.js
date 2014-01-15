@@ -45,6 +45,8 @@ function initCamera() {
     camera.position.set(0, 10, 20);   
     
     cameraControls = new THREE.OrbitControls(camera, renderer.domElement);    
+    cameraControls.noPan = false;
+    cameraControls.noKeys = true;
 }
 
 
@@ -97,6 +99,9 @@ function initMVC() {
 
 function animate() {
     controller.update();
+    
+    /* Will always point to the center of the frame */
+    cameraControls.target = new THREE.Vector3(0, 0, 0);
  
 	if (controller.isCameraFollowing) {
 		cameraControls.rotateRight(controller.model.omega / 100.0);  
