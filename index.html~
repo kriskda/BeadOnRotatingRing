@@ -10,6 +10,7 @@
     <script src="js/OrbitControls.js"></script>
     <script src="js/dat.gui.min.js"></script>
     <script src="js/jquery.js"></script>
+    <script type="text/javascript" src="js/jquery.flot.js"></script>
     <script src="js/vtip.js"></script>
     
 	<script type="text/x-mathjax-config"> 
@@ -69,8 +70,8 @@
 		<table class="plotarea">    
 		
 			<tr>
-				<td><div id="threejs_container" style="width:600px; height:500px;"></div></td>
-				<td><div id="box2" style="width:400px; height:400px;"></div></td>
+				<td><div id="threejs_container" style="width:500px; height:400px;"></div></td>
+				<td><div id="phase_space_plot" style="width:500px; height:400px;"></div></td>
 			</tr>
     		
 			<tr>

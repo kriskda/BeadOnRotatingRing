@@ -11,6 +11,18 @@ var height = container.offsetHeight;
 var accumulator = 0;
 var currentTime = getTimeInSeconds();
 
+var isRunning = true;
+
+
+window.addEventListener('blur', function() {
+   isRunning = false;
+}, false);
+
+window.addEventListener('focus', function() {
+   isRunning = true;
+}, false);
+
+
 init();
 animate();
 
@@ -59,7 +71,8 @@ function initLight() {
     scene.add(light);        
 }
 
-/* Draws plane like grid */
+
+/* Draws grid like plane */
 function addGrid() {
 	var geometry = new THREE.PlaneGeometry(100, 100, 20, 20);
 	var material = new THREE.MeshPhongMaterial({color: "rgb(200, 200, 200)", wireframe: true});
@@ -68,6 +81,7 @@ function addGrid() {
 	
 	scene.add(grid);
 }
+
 
 function initMVC() {
 	var dt = 0.01;
@@ -88,17 +102,15 @@ function initMVC() {
 	model.integrator = integrator;
 	
 	controller = new Controller(model);
+	controller.addDatGUI();
+	controller.setPlots();
 
-	var gui = new dat.GUI();
-	gui.add(controller, 'isCameraFollowing');
-	gui.add(controller.model, 'omega', 0, 10, 0.1);
-	
 	view.addToScene(scene);		
 }
 
 
 function animate() {
-	
+
 	var newTime = getTimeInSeconds();
 	var frameTime = newTime - currentTime;
 	currentTime = newTime;
@@ -108,7 +120,7 @@ function animate() {
 	var dt = controller.model.integrator.dt;
 
 	while (accumulator >= dt) {
-		if (controller.isSimulationRunning) {
+		if (isRunning && controller.isSimulationRunning) {
 			controller.update();
 		}
 
@@ -118,11 +130,17 @@ function animate() {
 	/* Will always point to the center of the frame */
 	cameraControls.target = new THREE.Vector3(0, 0, 0);
 	 
-	if (controller.isSimulationRunning && controller.isCameraFollowing) {
+	if (isRunning && controller.isSimulationRunning && controller.isCameraFollowing) {
 		cameraControls.rotateRight(controller.model.omega * frameTime);  
 	}
 
+	if (isRunning && controller.isSimulationRunning) {
+		controller.updatePlots();
+	}
+
 	cameraControls.update();
+
+	
 	
 	renderer.render(scene, camera);
     requestAnimationFrame(animate);	
@@ -141,7 +159,10 @@ function Controller(model) {
 	this.isCameraFollowing = true; 
 	this.isSimulationRunning = false;
 	
+	this.phaseSpacePlot;
+	
 	var self = this;
+	var phaseSpacePlotData = new PlotModelData();
 	
 	initListeners();
 	
@@ -161,11 +182,39 @@ function Controller(model) {
 		
 	}
 	
+	this.addDatGUI = function() {
+		var gui = new dat.GUI();
+		gui.add(self, 'isCameraFollowing');
+		gui.add(self.model, 'omega', 0, 10, 0.1);
+	}
+	
+	this.setPlots = function() {
+		phaseSpacePlot = jQuery.plot("#phase_space_plot", [], { 
+					series: {shadowSize: 0},       
+					colors: ['blue'],   
+					//xaxis: {min: 0, max: 10}, 
+					//yaxis: {min: -5, max: 10}, 
+					//zoom: {interactive: true},
+					//pan: {interactive: true},     
+		});	
+	}
+	
+	this.updatePlots = function() {
+		phaseSpacePlotData.addDataPoint(self.model.posVel);
+
+        phaseSpacePlot.setData([phaseSpacePlotData.data]);
+        phaseSpacePlot.setupGrid();
+        phaseSpacePlot.draw();
+	}
+	
 	this.toggleSimulationRunning = function() {
 		this.isSimulationRunning = !this.isSimulationRunning;
 	}
 	
 	this.resetSimulation = function() {
+		self.setPlots();
+		phaseSpacePlotData.clearData();
+		
 		model.R = 1*document.getElementById('R').value;
 		model.m = 1*document.getElementById('m').value;
 		model.g = 1*document.getElementById('g').value;
@@ -260,6 +309,8 @@ function Model(R, m, g, omega, theta0, thetaDot0, gamma) {
 	this.view;
 	this.integrator;
 
+	this.posVel;
+
     this.accel = function(x, v) { 
 		var omega2 = this.omega * this.omega;
 
@@ -267,10 +318,10 @@ function Model(R, m, g, omega, theta0, thetaDot0, gamma) {
     }
         
     this.move =  function() {
-        var posVel = this.integrator.integrate(this);
+        this.posVel = this.integrator.integrate(this);
 
-        this.theta = posVel[0];
-        this.thetaDot = posVel[1];
+        this.theta = this.posVel[0];
+        this.thetaDot = this.posVel[1];
 
         this.phi = this.phi + this.omega * this.integrator.dt;
 
@@ -313,4 +364,20 @@ function RK4Integrator(dt) {
     }
         
 }
+
+
+function PlotModelData() {
+	
+    this.data = [];
+
+    this.addDataPoint = function(point) {
+        this.data.push(point);                
+    };
+    
+    this.clearData = function() {
+		this.data = [];
+	};
+
+}
+
 
