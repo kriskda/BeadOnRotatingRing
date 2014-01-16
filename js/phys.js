@@ -86,25 +86,18 @@ function addGrid() {
 function initMVC() {
 	var dt = 0.01;
 	
-	var R = 1*document.getElementById('R').value;
-	var m = 1*document.getElementById('m').value;
-	var g = 1*document.getElementById('g').value;
-	var omega = 1*document.getElementById('omega').value;
-	var theta0 = 1*document.getElementById('theta0').value;
-	var thetaDot0 = 1*document.getElementById('thetaDot0').value;
-	var gamma = 1*document.getElementById('gamma').value;
-	
-	var model = new Model(R, m, g, omega, theta0, thetaDot0, gamma);
-	var view = new View(0, theta0);
+	var model = new Model(m, g, omega, theta0, thetaDot0, gamma);
+	var view = new View();
 	var integrator = new RK4Integrator(dt);
-	
+
 	model.view = view;
 	model.integrator = integrator;
 	
 	controller = new Controller(model);
+	controller.loadSimParameters();			// loadSimParameters() must be before addDatGui() method
 	controller.addDatGUI();
 	controller.setPlots();
-
+	
 	view.addToScene(scene);		
 }
 
@@ -140,11 +133,9 @@ function animate() {
 
 	cameraControls.update();
 
-	
-	
 	renderer.render(scene, camera);
     requestAnimationFrame(animate);	
-    
+ 
 }
 
 
@@ -214,20 +205,22 @@ function Controller(model) {
 	this.resetSimulation = function() {
 		self.setPlots();
 		phaseSpacePlotData.clearData();
-		
-		model.R = 1*document.getElementById('R').value;
+
+		self.loadSimParameters();
+		self.update();
+	}
+	
+	this.loadSimParameters = function() {
 		model.m = 1*document.getElementById('m').value;
 		model.g = 1*document.getElementById('g').value;
 		model.omega = 1*document.getElementById('omega').value;
 		model.theta = 1*document.getElementById('theta0').value;
 		model.thetaDot = 1*document.getElementById('thetaDot0').value;
-		model.gamma = 1*document.getElementById('gamma').value;
+		model.gamma = 1*document.getElementById('gamma').value;	
 		
-		//model.phi = 0
-		
-		self.update();
+		model.view.rotate(0, model.theta);	
 	}
-	
+		
 	this.update = function() {
 		this.model.move();
 	}
@@ -236,10 +229,11 @@ function Controller(model) {
 
 
 /* View of a bead on rotating ring */
-function View(phi, theta) {
+function View() {
 
-	var ring;
 	var ringRadius = 5;
+
+	var ring;	
 	var shiftY = ringRadius + 2;
 	var lineIndicator;
 	var bead;
@@ -267,8 +261,6 @@ function View(phi, theta) {
         var beadMaterial = new THREE.MeshPhongMaterial({color: "rgb(255, 0, 0)"});
         
         bead = new THREE.Mesh(beadGeometry, beadMaterial);
-        
-        rotate(phi, theta);
 	}
 	
 	function addToScene(scene) {
@@ -294,9 +286,9 @@ function View(phi, theta) {
 
 
 /* Model of a bead on rotating ring */
-function Model(R, m, g, omega, theta0, thetaDot0, gamma) {
+function Model(m, g, omega, theta0, thetaDot0, gamma) {
 
-	this.R = R;
+	this.R = 5;
 	this.m = m;
 	this.g = g;
 	this.omega = omega;
@@ -315,7 +307,7 @@ function Model(R, m, g, omega, theta0, thetaDot0, gamma) {
 		var omega2 = this.omega * this.omega;
 
 		return Math.sin(x) * (omega2 * Math.cos(x) + this.g / this.R) - this.gamma / this.m * v;
-    }
+    };
         
     this.move =  function() {
         this.posVel = this.integrator.integrate(this);
@@ -326,7 +318,7 @@ function Model(R, m, g, omega, theta0, thetaDot0, gamma) {
         this.phi = this.phi + this.omega * this.integrator.dt;
 
         this.view.rotate(this.phi, this.theta);
-    }	
+    };
     
 }
 
@@ -361,7 +353,7 @@ function RK4Integrator(dt) {
         var v = v1 + (dt / 6.0) * (a1 + 2 * a2 + 2 * a3 + a4);                
                 
         return [x, v]
-    }
+    };
         
 }
 
