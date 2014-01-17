@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+	<title>Koralik na obracającym się pierścieniu</title>
+        
+	<meta charset="utf-8"> 
+    
+	<script src="js/three.min.js"></script>
+	<script src="js/OrbitControls.js"></script>
+	<script src="js/dat.gui.min.js"></script>
+	<script src="js/jquery.js"></script>
+	<script type="text/javascript" src="js/jquery.flot.js"></script>
+	<script src="js/vtip.js"></script>
+    
+	<script type="text/x-mathjax-config"> 
+  		MathJax.Hub.Config({
+    		extensions: ["tex2jax.js"],
+    		jax: ["input/TeX","output/HTML-CSS"],
+    		tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]}
+  		});
+	</script>   
+	
+	<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+	
+	<link rel="stylesheet" type="text/css" href="css/mainstyle.css" />
+	<link rel="stylesheet" type="text/css" href="css/vtip.css" />
+    
+</head>
+
+<body>
+
+<div id="container">
+
+	<div id="content">
+	
+		<div id="input" class="formstyle">
+
+		<form class="form">		
+			<table>
+			
+ 				<tr>
+  					<td>$g [\frac{m}{s^2}]$</td> <td class="vtip" title="Przyśpieszenie grawitacyjne"><input class="inputtext" type="text" id="g" value="9.81" /></td>
+  					<td>$\gamma$</td> <td class="vtip" title="Współczynnik tarcia"><input class="inputtext" type="text" id="gamma" value="0.1" /></td>   					
+  					<td>$\theta_0 [rad]$</td> <td class="vtip" title="Wychylenie początkowe"><input class="inputtext" type="text" id="theta0" value="1.4" /></td>   					
+ 				</tr>
+ 
+		 		<tr>
+					<td >$m [kg]$</td> <td class="vtip" title="Masa koralika"><input class="inputtext" type="text" id="m" value="1" /></td>
+  					<td>$\omega_0 [\frac{rad}{s}]$</td> <td class="vtip" title="Częstość z jaką obraca się obręcz"><input class="inputtext" type="text" id="omega" value="4" /></td> 
+  					<td>$\dot \theta_0 [\frac{rad}{s}]$</td> <td class="vtip" title="Początkowa prędkość kątowa"><input class="inputtext" type="text" id="thetaDot0" value="0" /></td>
+ 				</tr>
+ 
+				<tr>
+  					<td></td>
+  					<td>
+  						<input id="startStopButton" type="button" value="start / stop" />
+  						<input id="resetButton" type="button" value="reset" />
+  					</td>   
+ 				</tr>
+ 				
+		</table>		
+	</form>
+		
+	</div>
+		
+	<div id="plots">
+		<table class="plotarea">    
+		
+			<tr>
+				<td><div id="threejs_container" style="width:500px; height:400px;"></div></td>
+				<td><div id="potencial_plot" class="vtip" title="Wykres potencjału" style="width:500px; height:400px;"></div></td>
+			</tr>
+    		
+			<tr>
+				<td></td>
+				<td><div id="phase_space_plot" class="vtip" title="Przestrzeń fazowa" style="width:500px; height:400px;"></div></td>
+			</tr>
+			
+		</table>	
+	</div>		
+		
+	</div>
+
+</div>
+
+
+</body>
+
+<script src="js/phys.js"></script>
+
+</html>
