@@ -69,12 +69,12 @@
 		
 			<tr>
 				<td><div id="threejs_container" style="width:500px; height:400px;"></div></td>
-				<td><div id="potencial_plot" style="width:500px; height:400px;"></div></td>
+				<td><div id="potencial_plot" class="vtip" title="Wykres potencjału" style="width:500px; height:400px;"></div></td>
 			</tr>
     		
 			<tr>
 				<td></td>
-				<td><div id="phase_space_plot" style="width:500px; height:400px;"></div></td>
+				<td><div id="phase_space_plot" class="vtip" title="Przestrzeń fazowa" style="width:500px; height:400px;"></div></td>
 			</tr>
 			
 		</table>	

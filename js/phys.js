@@ -178,8 +178,8 @@ function Controller(model) {
 	
 	this.addDatGUI = function() {
 		var gui = new dat.GUI();
-		gui.add(self, 'isCameraFollowing');
-		gui.add(self.model, 'omega', 0, 10, 0.1);
+		gui.add(self, 'isCameraFollowing').name("Obrót kamery");
+		gui.add(self.model, 'omega', 0, 10, 0.1).name("Omega").listen();
 	}
 	
 	this.setPlots = function() {
@@ -322,12 +322,12 @@ function Model() {
 	};
 
 	this.generatePotencialData = function() {
-		var x = -10;
+		var x = 0;
 		var Ep, Ek;
 		var data1 = [];
 		var data2 = [];
 
-		while (x <= 10) {
+		while (x <= 6.28319) {		// 2 * pi = 6.28319
 			data1.push([x, self.potencialEnergy(x)]);
 			data2.push([x, self.potencialEnergy(this.theta) + self.kineticEnergy(this.thetaDot)]);
 			
