@@ -55,8 +55,8 @@ function initScene() {
 
 
 function initCamera() {
-    camera = new THREE.PerspectiveCamera(65, width / height, 1, 1000);
-    camera.position.set(0, 10, 20);   
+    camera = new THREE.PerspectiveCamera(55, width / height, 1, 1000);
+    camera.position.set(0, 1, 4);   
     
     cameraControls = new THREE.OrbitControls(camera, renderer.domElement);    
     cameraControls.noPan = false;
@@ -74,7 +74,7 @@ function initLight() {
 
 /* Draws grid like plane */
 function addGrid() {
-	var geometry = new THREE.PlaneGeometry(100, 100, 20, 20);
+	var geometry = new THREE.PlaneGeometry(20, 20, 20, 20);
 	var material = new THREE.MeshPhongMaterial({color: "rgb(200, 200, 200)", wireframe: true});
 	var grid = new THREE.Mesh(geometry, material);
 	grid.rotation.x = -Math.PI / 2;
@@ -121,7 +121,7 @@ function animate() {
 	}	
 		
 	/* Will always point to the center of the frame */
-	cameraControls.target = new THREE.Vector3(0, 0, 0);
+	cameraControls.target = new THREE.Vector3(0, 0.5, 0);
 	 
 	if (isRunning && controller.isSimulationRunning && controller.isCameraFollowing) {
 		cameraControls.rotateRight(controller.model.omega * frameTime);  
@@ -150,11 +150,12 @@ function Controller(model) {
 	this.isCameraFollowing = true; 
 	this.isSimulationRunning = false;
 	
-	this.phaseSpacePlot;
+	var phaseSpacePlot;
+	var potencialPlot;
 	
 	var self = this;
 	var phaseSpacePlotData = new PlotModelData();
-	
+
 	initListeners();
 	
 	function initListeners() {
@@ -181,12 +182,13 @@ function Controller(model) {
 	
 	this.setPlots = function() {
 		phaseSpacePlot = jQuery.plot("#phase_space_plot", [], { 
-					series: {shadowSize: 0},       
-					colors: ['blue'],   
-					//xaxis: {min: 0, max: 10}, 
-					//yaxis: {min: -5, max: 10}, 
-					//zoom: {interactive: true},
-					//pan: {interactive: true},     
+			series: {shadowSize: 0},       
+			colors: ['blue'],      
+		});	
+		
+		potencialPlot = jQuery.plot("#potencial_plot", [], { 
+			series: {shadowSize: 0},       
+			colors: ['blue', 'red'],      
 		});	
 	}
 	
@@ -196,6 +198,10 @@ function Controller(model) {
         phaseSpacePlot.setData([phaseSpacePlotData.data]);
         phaseSpacePlot.setupGrid();
         phaseSpacePlot.draw();
+        
+        potencialPlot.setData(model.generatePotencialData());
+		potencialPlot.setupGrid();
+		potencialPlot.draw();
 	}
 	
 	this.toggleSimulationRunning = function() {
@@ -211,12 +217,12 @@ function Controller(model) {
 	}
 	
 	this.loadSimParameters = function() {
-		model.m = 1*document.getElementById('m').value;
-		model.g = 1*document.getElementById('g').value;
-		model.omega = 1*document.getElementById('omega').value;
-		model.theta = 1*document.getElementById('theta0').value;
-		model.thetaDot = 1*document.getElementById('thetaDot0').value;
-		model.gamma = 1*document.getElementById('gamma').value;	
+		model.m = 1 * document.getElementById('m').value;
+		model.g = 1 * document.getElementById('g').value;
+		model.omega = 1 * document.getElementById('omega').value;
+		model.theta = 1 * document.getElementById('theta0').value;
+		model.thetaDot = 1 * document.getElementById('thetaDot0').value;
+		model.gamma = 1 * document.getElementById('gamma').value;	
 		
 		model.view.rotate(0, model.theta);	
 	}
@@ -231,17 +237,17 @@ function Controller(model) {
 /* View of a bead on rotating ring */
 function View() {
 
-	var ringRadius = 5;
+	var ringRadius = 1;
 
 	var ring;	
-	var shiftY = ringRadius + 2;
+	var shiftY = ringRadius + 0.2;
 	var lineIndicator;
 	var bead;
 	
 	init();
 	
 	function init() {		
-		var ringGeometry = new THREE.TorusGeometry(ringRadius, 0.05, 128, 128);
+		var ringGeometry = new THREE.TorusGeometry(ringRadius, 0.01, 128, 128);
 		var ringMaterial = new THREE.MeshPhongMaterial();
 			
 		ring = new THREE.Mesh(ringGeometry, ringMaterial);
@@ -257,7 +263,7 @@ function View() {
         
         lineIndicator = new THREE.Line(lineGeometry, lineMaterial);
         
-        var beadGeometry = new THREE.SphereGeometry(0.3, 32, 32);
+        var beadGeometry = new THREE.SphereGeometry(0.05, 32, 32);
         var beadMaterial = new THREE.MeshPhongMaterial({color: "rgb(255, 0, 0)"});
         
         bead = new THREE.Mesh(beadGeometry, beadMaterial);
@@ -286,15 +292,15 @@ function View() {
 
 
 /* Model of a bead on rotating ring */
-function Model(m, g, omega, theta0, thetaDot0, gamma) {
+function Model() {
 
-	this.R = 5;
-	this.m = m;
-	this.g = g;
-	this.omega = omega;
-	this.theta = theta0;
-	this.thetaDot = thetaDot0;
-	this.gamma = gamma;
+	this.R = 1;
+	this.m;
+	this.g;
+	this.omega;
+	this.theta;
+	this.thetaDot;
+	this.gamma;
 	
 	this.phi = 0;
 	
@@ -302,11 +308,35 @@ function Model(m, g, omega, theta0, thetaDot0, gamma) {
 	this.integrator;
 
 	this.posVel;
+	
+	var self = this;
+
+	this.potencialEnergy = function(x) {
+		return this.m * this.R * (this.g * Math.cos(x) - this.R * this.omega * this.omega * Math.sin(x) * Math.sin(x) * 0.5);
+	};
+	
+	this.kineticEnergy = function(v) {
+		return this.m * this.R * this.R * v * v * 0.5;
+	};
+
+	this.generatePotencialData = function() {
+		var x = -10;
+		var Ep, Ek;
+		var data1 = [];
+		var data2 = [];
+
+		while (x <= 10) {
+			data1.push([x, self.potencialEnergy(x)]);
+			data2.push([x, self.potencialEnergy(this.theta) + self.kineticEnergy(this.thetaDot)]);
+			
+			x += 0.1;
+		}
+		
+    	return [data1, data2];
+    };
 
     this.accel = function(x, v) { 
-		var omega2 = this.omega * this.omega;
-
-		return Math.sin(x) * (omega2 * Math.cos(x) + this.g / this.R) - this.gamma / this.m * v;
+		return Math.sin(x) * (this.omega * this.omega * Math.cos(x) + this.g / this.R) - this.gamma / this.m * v;
     };
         
     this.move =  function() {
