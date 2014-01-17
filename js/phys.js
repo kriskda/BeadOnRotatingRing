@@ -34,14 +34,14 @@ function init() {
 	initCamera();
 	initLight();
 	
-	addGrid();
+	addPlane();
 	
 	initMVC();
 }
 
 
 function initRenderer() {
-	renderer = new THREE.WebGLRenderer({antialias: true});
+	renderer = new THREE.WebGLRenderer({precision: 'lowp', antialias: true, preserveDrawingBuffer: false});
     renderer.setSize(width, height);  
     renderer.setClearColor("rgb(255, 255, 255)", 1); 
 
@@ -55,7 +55,7 @@ function initScene() {
 
 
 function initCamera() {
-    camera = new THREE.PerspectiveCamera(55, width / height, 1, 1000);
+    camera = new THREE.PerspectiveCamera(55, width / height, 1, 100);
     camera.position.set(0, 1, 4);   
     
     cameraControls = new THREE.OrbitControls(camera, renderer.domElement);    
@@ -67,19 +67,21 @@ function initCamera() {
 function initLight() {
     var light = new THREE.PointLight("rgb(255, 255, 255)");
     
-    light.position.set(300, 300, 10);
+    light.position.set(0, 50, 10);
     scene.add(light);        
 }
 
 
-/* Draws grid like plane */
-function addGrid() {
-	var geometry = new THREE.PlaneGeometry(20, 20, 20, 20);
-	var material = new THREE.MeshPhongMaterial({color: "rgb(200, 200, 200)", wireframe: true});
-	var grid = new THREE.Mesh(geometry, material);
-	grid.rotation.x = -Math.PI / 2;
+/* Draws checker board plane */
+function addPlane() {
+	var texture = THREE.ImageUtils.loadTexture('../image/checker_board.jpg');
+	var geometry = new THREE.PlaneGeometry(10, 10, 20, 20);
+	var material = new THREE.MeshLambertMaterial({map: texture});
+	var plane = new THREE.Mesh(geometry, material);
 	
-	scene.add(grid);
+	plane.rotation.x = -Math.PI / 2;
+	
+	scene.add(plane);
 }
 
 
