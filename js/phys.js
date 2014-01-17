@@ -74,7 +74,7 @@ function initLight() {
 
 /* Draws checker board plane */
 function addPlane() {
-	var texture = THREE.ImageUtils.loadTexture('../image/checker_board.jpg');
+	var texture = THREE.ImageUtils.loadTexture('./image/checker_board.jpg');
 	var geometry = new THREE.PlaneGeometry(10, 10, 20, 20);
 	var material = new THREE.MeshLambertMaterial({map: texture});
 	var plane = new THREE.Mesh(geometry, material);
