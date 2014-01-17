@@ -178,6 +178,7 @@ function Controller(model) {
 	
 	this.addDatGUI = function() {
 		var gui = new dat.GUI();
+		
 		gui.add(self, 'isCameraFollowing').name("Obrót kamery");
 		gui.add(self.model, 'omega', 0, 10, 0.1).name("Omega").listen();
 	}
